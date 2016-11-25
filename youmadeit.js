@@ -2080,10 +2080,15 @@ function onConnectionLost(responseObject) {
     };
 
     ext.connect_youmadeit = function(apiKey, deviceName) {
-        if (client != null) {
-            console.log("Disconnecting from YouMadeIT");
-            client.disconnect();
+        // Disconnect any previous connection
+        try {
+            if (client != null) {
+                console.log("Disconnecting from YouMadeIT");
+                client.disconnect();
+            }            
         }
+        catch (err) {}
+        
         // Connect to youmadeit at startup
         init_youmadeit(apiKey, deviceName, function() {
             // On Connect
