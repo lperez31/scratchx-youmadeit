@@ -1993,6 +1993,10 @@ var my_ids = {};
 
 var client;
 
+function utf8_encode(str) {
+    return unescape(encodeURIComponent(str));
+}
+
 function init_youmadeit(apiKey, deviceName, onConnect) {
     my_ids.apiKey = apiKey
     my_ids.deviceName = deviceName
@@ -2017,7 +2021,8 @@ function sendToDevice(targetDeviceName, paramName, data) {
       'dataType': dataType,
       'data': data
     };
-    payload = JSON.stringify(payloadJson);
+    payload = utf8_encode(JSON.stringify(payloadJson));
+    console.log(payload);
     var message = new Messaging.Message(payload);
     message.destinationName = topic;
     console.log("sending to topic: " + topic);
@@ -2088,7 +2093,7 @@ function onConnectionLost(responseObject) {
             }            
         }
         catch (err) {}
-        
+
         // Connect to youmadeit at startup
         init_youmadeit(apiKey, deviceName, function() {
             // On Connect
