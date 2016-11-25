@@ -1998,7 +1998,8 @@ function init_youmadeit(apiKey, deviceName, onConnect) {
     my_ids.deviceName = deviceName
     my_ids.encodedDeviceName = encodeURIComponent(deviceName)
 
-    client = new Messaging.Client(myServer.host, myServer.port, "test_id");
+    var random_id = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 15);
+    client = new Messaging.Client(myServer.host, myServer.port, random_id);
 
     client.connect({onSuccess:onConnect}); 
     client.onConnectionLost = onConnectionLost;
