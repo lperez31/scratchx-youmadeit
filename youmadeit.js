@@ -2022,7 +2022,23 @@ function sendToDevice(targetDeviceName, paramName, data) {
       'data': data
     };
     payload = utf8_encode(JSON.stringify(payloadJson));
-    console.log(payload);
+    var message = new Messaging.Message(payload);
+    message.destinationName = topic;
+    console.log("sending to topic: " + topic);
+    client.send(message);
+}
+
+// Send data to other device through broker
+function sendToMobile(paramName, data) {
+    topic = "mobile" + "/" + my_ids.apiKey;
+    var dataType = isNumeric(data)?'num':'str';
+    var payloadJson = {
+      'deviceName': my_ids.deviceName,
+      'paramName': paramName,
+      'dataType': dataType,
+      'data': data
+    };
+    payload = utf8_encode(JSON.stringify(payloadJson));
     var message = new Messaging.Message(payload);
     message.destinationName = topic;
     console.log("sending to topic: " + topic);
@@ -2039,8 +2055,6 @@ function onConnect() {
   my_ids.subscribeTopic = subscribeTopic;
   client.subscribe(subscribeTopic);
   console.log("Subscribed to topic: " + subscribeTopic)
-
-  //sendToDevice("scratch", "coucou", 20);
 }
 
 var message_received = false; // This becomes true after message received
@@ -2106,6 +2120,10 @@ function onConnectionLost(responseObject) {
         sendToDevice(targetDeviceName, paramName, value);            
     };
 
+    ext.send_to_mobile = function(paramName, value) {
+        sendToMobile(paramName, value);
+    }
+
     ext.when_message = function() {
        // Reset alarm_went_off if it is true, and return true
        // otherwise, return false.
@@ -2130,6 +2148,7 @@ function onConnectionLost(responseObject) {
         blocks: [
             ['', "connecter YouMadeIT. Clef d'api: %s Ton nom: %s", 'connect_youmadeit', 'TA_CLEF_D_API', 'jules'],
             ['', 'envoyer parametre: %s valeur: %s à %s', 'send_message', 'score', '2', 'jules'],
+            ['', 'envoyer parametre: %s valeur: %s vers app mobile', 'send_to_mobile', 'score', '2'],
             ['h', 'message reçu', 'when_message'],
             ['r', 'parametre', 'get_message_param_name'],
             ['r', 'valeur', 'get_message_value'],
