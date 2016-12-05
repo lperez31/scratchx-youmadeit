@@ -2068,6 +2068,7 @@ function onConnect() {
 var message_received_parameter_name = ''; // Contains the paramName of message received
 var message_received_value = '';  // Contains the value of message received
 var message_queue = []; // Will contain the list of received messages
+var last_message_processed_datetime = new Date();
 
 // The callback for when a PUBLISH message is received from the server.
 function onMessageArrived(message) {
@@ -2137,10 +2138,23 @@ function onConnectionLost(responseObject) {
        // If there is a message, put it in variables and return true
        // otherwise, return false.
        if (message_queue.length > 0) {
-           var element = message_queue.shift();
-           message_received_parameter_name = element.paramName;
-           message_received_value = element.value;
-           return true;
+          if (message_queue.length > 10) {
+            // Too many messages accumulated, flush
+            message_queue = [];
+          }
+          var now = new Date();
+          // Process messages every 50ms
+          if ((now - last_message_processed_datetime) > 50) {
+            last_message_processed_datetime = now;
+            var element = message_queue.shift();
+            message_received_parameter_name = element.paramName;
+            message_received_value = element.value;
+            console.log("Processing received message: " + message_received_parameter_name + " value: " + message_received_value);
+            return true;
+          }
+          else {
+            return false;
+          }
        }
 
        return false;
