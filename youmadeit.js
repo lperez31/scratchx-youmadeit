@@ -2065,20 +2065,21 @@ function onConnect() {
   console.log("Subscribed to topic: " + subscribeTopic)
 }
 
-var message_received = false; // This becomes true after message received
 var message_received_parameter_name = ''; // Contains the paramName of message received
 var message_received_value = '';  // Contains the value of message received
+var message_queue = []; // Will contain the list of received messages
 
 // The callback for when a PUBLISH message is received from the server.
 function onMessageArrived(message) {
   data = JSON.parse(decodeURIComponent(escape(message.payloadString)))
-  paramName = data['paramName']
-  value = data['data']
-  // TODO do something with the data received
-  message_received = true;
-  message_received_parameter_name = paramName;
-  message_received_value = value;
-  console.log("Received parameter name: " + paramName + " Data: " + value);
+  var element = {
+    'paramName': data['paramName'],
+    'value': data['data'] 
+  }
+  // Add element to message_queue
+  message_queue.push(element);
+
+  console.log("Received parameter name: " + element.paramName + " Data: " + element.value);
 }
 
 function onConnectionLost(responseObject) {
@@ -2133,10 +2134,12 @@ function onConnectionLost(responseObject) {
     }
 
     ext.when_message = function() {
-       // Reset alarm_went_off if it is true, and return true
+       // If there is a message, put it in variables and return true
        // otherwise, return false.
-       if (message_received === true) {
-           message_received = false;
+       if (message_queue.length > 0) {
+           var element = message_queue.shift();
+           message_received_parameter_name = element.paramName;
+           message_received_value = element.value;
            return true;
        }
 
