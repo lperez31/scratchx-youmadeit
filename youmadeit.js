@@ -2069,6 +2069,7 @@ var message_received_parameter_name = ''; // Contains the paramName of message r
 var message_received_value = '';  // Contains the value of message received
 var message_queue = []; // Will contain the list of received messages
 var last_message_processed_datetime = new Date();
+var last_message_processed_forParamName_datetime = {};  // Contains the last message processed for each parameter name
 
 // The callback for when a PUBLISH message is received from the server.
 function onMessageArrived(message) {
@@ -2080,7 +2081,7 @@ function onMessageArrived(message) {
   // Add element to message_queue
   message_queue.push(element);
 
-  console.log("Received parameter name: " + element.paramName + " Data: " + element.value);
+  //console.log("Received parameter name: " + element.paramName + " Data: " + element.value);
 }
 
 function onConnectionLost(responseObject) {
@@ -2134,23 +2135,41 @@ function onConnectionLost(responseObject) {
         sendToMobile(paramName, value);
     }
 
-    ext.when_message = function() {
+    ext.when_message = function(paramName) {
        // If there is a message, put it in variables and return true
        // otherwise, return false.
        if (message_queue.length > 0) {
-          if (message_queue.length > 10) {
+          if (message_queue.length > 11) {
             // Too many messages accumulated, flush
+            console.log("Too many messages accumulated. Flushing.");
             message_queue = [];
           }
           var now = new Date();
-          // Process messages every 50ms
-          if ((now - last_message_processed_datetime) > 50) {
+          // Initialise last message processed date for this parameter at first execution
+          if (!(paramName in last_message_processed_forParamName_datetime)) {
+            last_message_processed_forParamName_datetime[paramName] = new Date(0);
+          }
+          // Process messages every 50ms, and every 200ms for each parameter name
+          //if ((now - last_message_processed_datetime) > 50) {
+          if ((now - last_message_processed_datetime) > 50 && (now - last_message_processed_forParamName_datetime[paramName]) > 200) {
             last_message_processed_datetime = now;
-            var element = message_queue.shift();
-            message_received_parameter_name = element.paramName;
-            message_received_value = element.value;
-            console.log("Processing received message: " + message_received_parameter_name + " value: " + message_received_value);
-            return true;
+            last_message_processed_forParamName_datetime[paramName] = now;
+            // Iterate on the array backwards
+            for (var i = 0; i < message_queue.length; ++i) {
+              // Check if the element has the requested parameter name
+              if (message_queue[i].paramName === paramName) {
+                //console.log("ParamName " + paramName);
+                // Remove processed element from array
+                var element = message_queue.splice(i, 1)[0];
+                //console.log(message_queue);
+                message_received_parameter_name = element.paramName;
+                message_received_value = element.value;
+                //console.log("Processing received message: " + message_received_parameter_name + " value: " + message_received_value);
+                return true;                
+              }
+            }
+            // No element found for the requested parameter name
+            return false;
           }
           else {
             return false;
@@ -2174,7 +2193,7 @@ function onConnectionLost(responseObject) {
             ['', "connecter YouMadeIT. Clef d'api: %s Ton nom: %s", 'connect_youmadeit', 'TA_CLEF_D_API', 'jules'],
             ['', 'envoyer parametre: %s valeur: %s à %s', 'send_message', 'score', '2', 'jules'],
             ['', 'envoyer parametre: %s valeur: %s vers app mobile', 'send_to_mobile', 'score', '2'],
-            ['h', 'message reçu', 'when_message'],
+            ['h', 'message reçu: %s', 'when_message', 'nom_du_paramètre'],
             ['r', 'parametre', 'get_message_param_name'],
             ['r', 'valeur', 'get_message_value'],
         ]
