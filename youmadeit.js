@@ -1,6 +1,14 @@
 (function(ext) {
 
 /*******************************************************************************
+ * Copyright (c) 2016 Enersy SAS.
+ * 
+ * This library is intented to be used with ScratchX and YouMadeIt service
+ * 
+ * License: Eclipse Public License v1.0 
+ *
+ * It uses code from IBM Corp.
+ * 
  * Copyright (c) 2013 IBM Corp.
  *
  * All rights reserved. This program and the accompanying materials
